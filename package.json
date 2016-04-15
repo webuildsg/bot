@@ -1,12 +1,16 @@
 {
-  "name": "webuildbot",
+  "name": "bot",
   "version": "1.0.0",
-  "description": "",
+  "description": "Facebook Messenger bot for querying the upcoming open events and recently updated repositories",
   "main": "index.js",
+  "private": true,
   "dependencies": {
     "body-parser": "^1.15.0",
     "express": "^4.13.4",
     "request": "^2.71.0"
+  },
+  "author": {
+    "name" : "KahWee Teng"
   },
   "devDependencies": {
     "standard": "^6.0.8"
@@ -16,12 +20,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kahwee/webuildbot.git"
+    "url": "git+https://github.com/webuildsg/bot.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kahwee/webuildbot/issues"
+    "url": "https://github.com/webuildsg/bot/issues"
   },
-  "homepage": "https://github.com/kahwee/webuildbot#readme"
+  "homepage": "https://github.com/webuildsg/bot#readme"
 }
