@@ -64,7 +64,7 @@ function latestRepo (senderId) {
       parsed.repos.forEach((repo) => {
         send.text(
           senderId,
-          `${repo.owner.name}/${repo.name}
+          `${repo.owner.login}/${repo.name}
 URL: ${repo.html_url}
           `
         )
