@@ -65,7 +65,7 @@ function latestRepo (senderId) {
         send.text(
           senderId,
           `${repo.owner.login}/${repo.name}
-URL: ${repo.html_url}
+${repo.html_url}
           `
         )
       })
@@ -87,7 +87,7 @@ function upcomingEvent (senderId) {
           `${event.name}
 Organizer: ${event.group_name}
 Date & Time: ${event.formatted_time}
-URL: ${event.url}
+${event.url}
           `
         )
       })
