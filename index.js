@@ -45,36 +45,66 @@ function processPayload (senderId, payload) {
 }
 
 function processMessageText (senderId, text) {
-  if (text.toLowerCase().includes('upcoming event')) {
-    request('https://webuild.sg/api/v1/events?n=5', (err, resp, body) => {
-      if (!err) {
-        const parsed = JSON.parse(body)
-        //send.text(senderId, `Here's the next 5 events:`)
-        parsed.events.forEach((event) => {
-          send.text(
-            senderId,
-            `${event.name}
+  const textLower = text.toLowerCase()
+  if (textLower.includes('upcoming event')) {
+    upcomingEvent(senderId)
+  } else if (textLower.includes('latest repo')) {
+    latestRepo(senderId)
+  }
+}
+
+/**
+ * Fetches the latest 5 repositories
+ * @param  {[type]} senderId [description]
+ */
+function latestRepo (senderId) {
+  request('https://webuild.sg/api/v1/repos?n=5', (err, resp, body) => {
+    if (!err) {
+      const parsed = JSON.parse(body)
+      parsed.repos.forEach((repo) => {
+        send.text(
+          senderId,
+          `${repo.owner.name}/${repo.name}
+URL: ${repo.html_url}
+          `
+        )
+      })
+    }
+  })
+}
+
+/**
+ * Fetches 5 upcoming events
+ * @param  {[type]} senderId [description]
+ */
+function upcomingEvent (senderId) {
+  request('https://webuild.sg/api/v1/events?n=5', (err, resp, body) => {
+    if (!err) {
+      const parsed = JSON.parse(body)
+      parsed.events.forEach((event) => {
+        send.text(
+          senderId,
+          `${event.name}
 Organizer: ${event.group_name}
 Date & Time: ${event.formatted_time}
 URL: ${event.url}
-            `
-          )
-        })
-        // We cannot use this because Facebook don't allow more than 3 buttons.
-        // send.buttons (
-        //   senderId,
-        //   `Choose an upcoming event you're interested in`,
-        //   parsed.events.map((event) => {
-        //     return {
-        //       type: 'postback',
-        //       title: event.name,
-        //       payload: `EVENT_a`
-        //     }
-        //   })
-        // )
-      }
-    })
-  }
+          `
+        )
+      })
+      // We cannot use this because Facebook don't allow more than 3 buttons.
+      // send.buttons (
+      //   senderId,
+      //   `Choose an upcoming event you're interested in`,
+      //   parsed.events.map((event) => {
+      //     return {
+      //       type: 'postback',
+      //       title: event.name,
+      //       payload: `EVENT_a`
+      //     }
+      //   })
+      // )
+    }
+  })
 }
 
 app.listen(3124, () => {
