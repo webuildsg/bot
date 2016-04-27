@@ -1,5 +1,5 @@
 const process = require('process')
-const request = require('request')
+const got = require('got')
 const accessToken = process.env.accessToken
 
 exports.text = function (senderId, text) {
@@ -30,17 +30,15 @@ exports.buttons = function (senderId, text, buttons) {
  * @return {[type]}          [description]
  */
 function generic (senderId, message) {
-  request({
-    url: 'https://graph.facebook.com/v2.6/me/messages',
-    qs: {
+  got.post('https://graph.facebook.com/v2.6/me/messages', {
+    query: {
       access_token: accessToken
     },
-    method: 'POST',
-    json: {
+    body: JSON.stringify({
       recipient: {
         id: senderId
       },
       message: message
-    }
+    })
   }, function (error, response) {})
 }
