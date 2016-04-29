@@ -84,9 +84,9 @@ function upcomingEvent (senderId) {
       const parsed = JSON.parse(body)
       var eventElements = parsed.events.map((event) => {
         return {
-          'title': `${event.group_name} ${event.name}`,
+          'title': `${event.name}`,
           'image_url': `https://maps.googleapis.com/maps/api/staticmap?zoom=13&size=500x500&maptype=roadmap&markers=color:red%7C${event.latitude},${event.longitude}&key=${mapsApiKey}`,
-          'subtitle': event.formatted_time,
+          'subtitle': `${event.group_name} | ${event.formatted_time}`,
           'buttons': [
             {
               'type': 'web_url',
