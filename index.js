@@ -6,6 +6,7 @@ const send = require('./send')
 
 const app = express()
 const verifyToken = process.env.verifyToken
+const mapsApiKey = process.env.mapsApiKey
 
 app.use(bodyParser.json())
 
@@ -81,28 +82,32 @@ function upcomingEvent (senderId) {
   request('https://webuild.sg/api/v1/events?n=5', (err, resp, body) => {
     if (!err) {
       const parsed = JSON.parse(body)
-      parsed.events.forEach((event) => {
-        send.text(
-          senderId,
-          `${event.name}
-Organizer: ${event.group_name}
-Date & Time: ${event.formatted_time}
-${event.url}
-          `
-        )
+      var eventElements = parsed.events.map((event) => {
+        return {
+          'title': `${event.group_name} ${event.name}`,
+          'image_url': `https://maps.googleapis.com/maps/api/staticmap?zoom=13&size=500x500&maptype=roadmap&markers=color:red%7C${event.latitude},${event.longitude}&key=${mapsApiKey}`,
+          'subtitle': event.formatted_time,
+          'buttons': [
+            {
+              'type': 'web_url',
+              'url': event.url,
+              'title': 'View Event'
+            },
+            {
+              'type': 'web_url',
+              'url': event.group_url,
+              'title': 'View Group'
+            },
+            {
+              'type': 'web_url',
+              'url': `https://maps.google.com/maps?f=q&hl=en&q=${event.latitude},${event.longitude}`,
+              'title': 'Get Directions'
+            }
+          ]
+        }
       })
-      // We cannot use this because Facebook don't allow more than 3 buttons.
-      // send.buttons (
-      //   senderId,
-      //   `Choose an upcoming event you're interested in`,
-      //   parsed.events.map((event) => {
-      //     return {
-      //       type: 'postback',
-      //       title: event.name,
-      //       payload: `EVENT_a`
-      //     }
-      //   })
-      // )
+
+      send.genericTemplate(senderId, eventElements)
     }
   })
 }
