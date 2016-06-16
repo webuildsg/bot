@@ -34,7 +34,11 @@ app.post('/*', (req, res) => {
   if (messaging) {
     messaging.forEach((item) => {
       if (item.message && item.message.text) {
-        users.update({id: item.sender.id}, item.sender, {upsert: true})
+        users.findOne({id: item.sender.id }, function (err, doc) {
+          if (doc === null) {
+            db.insert({ id: item.sender.id })
+          }
+        })
         processMessageText(item.sender.id, item.message.text)
       } else if (item.postback && item.postback.payload) {
         processPayload(senderId, item.postback.payload)
