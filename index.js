@@ -114,7 +114,8 @@ function generateFbPayload (events) {
  */
 function upcomingEvent (senderId, eventRequest) {
   if (eventRequest.dates) {
-    request(`https://webuild.sg/api/v1/check/${eventRequest.year}-${eventRequest.month}-${eventRequest.day}?n=5`, (err, resp, body) => {
+console.log(`https://webuild.sg/api/v1/check/${eventRequest.dates.year}-${eventRequest.dates.month}-${eventRequest.dates.day}?n=5`)
+    request(`https://webuild.sg/api/v1/check/${eventRequest.dates.year}-${eventRequest.dates.month+1}-${eventRequest.dates.day}?n=5`, (err, resp, body) => {
       if (!err) {
         const parsed = JSON.parse(body)
         var eventElements = generateFbPayload(parsed.events)
