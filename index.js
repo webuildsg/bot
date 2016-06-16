@@ -47,13 +47,6 @@ function processPayload (senderId, payload) {
   }
 }
 
-function processNlpEvent (nlpText) {
-  const root = nlpText.root()
-  return {
-    upcoming: root.includes('upcoming'),
-    dates: nlpText.dates()[0]
-  }
-}
 function processMessageText (senderId, text) {
   const eventRequest = eventSpeech.getParsedRequest(text)
   if (eventRequest.mode === 'event') {
@@ -117,12 +110,12 @@ function generateFbPayload (events) {
 }
 
 function sendEvent (senderId, events) {
-  const eventCount = +parsed.meta.total_events
+  const eventCount = +events.meta.total_events
   if (eventCount === 0) {
     send.text(senderId, `No events found :( Try another day`)
   } else if (eventCount > 0) {
-    send.text(senderId, `We found you ${parsed.meta.total_events} event(s) for you to go to!`)
-    var eventElements = generateFbPayload(parsed.events)
+    send.text(senderId, `We found you ${events.meta.total_events} event(s) for you to go to!`)
+    var eventElements = generateFbPayload(events.events)
     send.genericTemplate(senderId, eventElements)
   }
 }
