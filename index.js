@@ -3,12 +3,13 @@ const bodyParser = require('body-parser')
 const request = require('request')
 const process = require('process')
 const send = require('./send')
-
+const eventSpeech = require('./src/speech')
 const app = express()
 const verifyToken = process.env.verifyToken
 const mapsApiKey = process.env.mapsApiKey
 
 app.use(bodyParser.json())
+app.set('json spaces', 2)
 
 app.get('/*', (req, res) => {
   const q = req.query
@@ -45,11 +46,18 @@ function processPayload (senderId, payload) {
   }
 }
 
+function processNlpEvent (nlpText) {
+  const root = nlpText.root()
+  return {
+    upcoming: root.includes('upcoming'),
+    dates: nlpText.dates()[0]
+  }
+}
 function processMessageText (senderId, text) {
-  const textLower = text.toLowerCase()
-  if (textLower.includes('upcoming event')) {
-    upcomingEvent(senderId)
-  } else if (textLower.includes('latest repo')) {
+  const eventRequest = eventSpeech.getParsedRequest(text)
+  if (eventRequest.mode === 'event') {
+    upcomingEvent(senderId, eventRequest)
+  } else if (eventRequest.mode === 'repo') {
     latestRepo(senderId)
   }
 }
@@ -74,42 +82,54 @@ ${repo.html_url}
   })
 }
 
-/**
- * Fetches 5 upcoming events
- * @param  {[type]} senderId [description]
- */
-function upcomingEvent (senderId) {
-  request('https://webuild.sg/api/v1/events?n=5', (err, resp, body) => {
-    if (!err) {
-      const parsed = JSON.parse(body)
-      var eventElements = parsed.events.map((event) => {
-        return {
-          'title': `${event.name}`,
-          'image_url': `https://maps.googleapis.com/maps/api/staticmap?zoom=13&size=500x500&maptype=roadmap&markers=color:red%7C${event.latitude},${event.longitude}&key=${mapsApiKey}`,
-          'subtitle': `${event.group_name} | ${event.formatted_time}`,
-          'buttons': [
-            {
-              'type': 'web_url',
-              'url': event.url,
-              'title': 'View Event'
-            },
-            {
-              'type': 'web_url',
-              'url': event.group_url,
-              'title': 'View Group'
-            },
-            {
-              'type': 'web_url',
-              'url': `https://maps.google.com/maps?f=q&hl=en&q=${event.latitude},${event.longitude}`,
-              'title': 'Get Directions'
-            }
-          ]
+function generateFbPayload (events) {
+  return events.map((event) => {
+    return {
+      'title': `${event.name}`,
+      'image_url': `https://maps.googleapis.com/maps/api/staticmap?zoom=13&size=500x500&maptype=roadmap&markers=color:red%7C${event.latitude},${event.longitude}&key=${mapsApiKey}`,
+      'subtitle': `${event.group_name} | ${event.formatted_time}`,
+      'buttons': [
+        {
+          'type': 'web_url',
+          'url': event.url,
+          'title': 'View Event'
+        },
+        {
+          'type': 'web_url',
+          'url': event.group_url,
+          'title': 'View Group'
+        },
+        {
+          'type': 'web_url',
+          'url': `https://maps.google.com/maps?f=q&hl=en&q=${event.latitude},${event.longitude}`,
+          'title': 'Get Directions'
         }
-      })
-
-      send.genericTemplate(senderId, eventElements)
+      ]
     }
   })
+}
+/**
+ * Fetches 5 upcoming events or by event date
+ * @param  {[type]} senderId [description]
+ */
+function upcomingEvent (senderId, eventRequest) {
+  if (eventRequest.dates) {
+    request(`https://webuild.sg/api/v1/check/${eventRequest.year}-${eventRequest.month}-${eventRequest.day}?n=5`, (err, resp, body) => {
+      if (!err) {
+        const parsed = JSON.parse(body)
+        var eventElements = generateFbPayload(parsed.events)
+        send.genericTemplate(senderId, eventElements)
+      }
+    })
+  } else {
+    request('https://webuild.sg/api/v1/events?n=5', (err, resp, body) => {
+      if (!err) {
+        const parsed = JSON.parse(body)
+        var eventElements = generateFbPayload(parsed.events)
+        send.genericTemplate(senderId, eventElements)
+      }
+    })
+  }
 }
 
 app.listen(3124, () => {
