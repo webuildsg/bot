@@ -83,11 +83,13 @@ ${repo.html_url}
 }
 
 function generateFbPayload (events) {
+  const nomap = 'https://avatars0.githubusercontent.com/u/7611825?v=3&s=500'
   return events.map((event) => {
-    return {
+    let payload = {
       'title': `${event.name}`,
-      'image_url': `https://maps.googleapis.com/maps/api/staticmap?zoom=13&size=500x500&maptype=roadmap&markers=color:red%7C${event.latitude},${event.longitude}&key=${mapsApiKey}`,
-      'subtitle': `${event.group_name} | ${event.formatted_time}`,
+      'image_url': nomap,
+      'subtitle': `${event.group_name} 
+ ${event.formatted_time}`,
       'buttons': [
         {
           'type': 'web_url',
@@ -98,36 +100,49 @@ function generateFbPayload (events) {
           'type': 'web_url',
           'url': event.group_url,
           'title': 'View Group'
-        },
-        {
-          'type': 'web_url',
-          'url': `https://maps.google.com/maps?f=q&hl=en&q=${event.latitude},${event.longitude}`,
-          'title': 'Get Directions'
         }
       ]
     }
+    if (event.latitude && event.longitude) {
+      payload.image_url = `https://maps.googleapis.com/maps/api/staticmap?zoom=13&size=500x500&maptype=roadmap&markers=color:red%7C${event.latitude},${event.longitude}&key=${mapsApiKey}`
+      payload.buttons.push({
+        'type': 'web_url',
+        'url': `https://maps.google.com/maps?f=q&hl=en&q=${event.latitude},${event.longitude}`,
+        'title': 'Get Directions'
+      })
+    }
+    return payload
   })
 }
+
+function sendEvent (senderId, events) {
+  const eventCount = +parsed.meta.total_events
+  if (eventCount === 0) {
+    send.text(senderId, `No events found :( Try another day`)
+  } else if (eventCount > 0) {
+    send.text(senderId, `We found you ${parsed.meta.total_events} event(s) for you to go to!`)
+    var eventElements = generateFbPayload(parsed.events)
+    send.genericTemplate(senderId, eventElements)
+  }
+}
+
 /**
  * Fetches 5 upcoming events or by event date
  * @param  {[type]} senderId [description]
  */
 function upcomingEvent (senderId, eventRequest) {
   if (eventRequest.dates) {
-console.log(`https://webuild.sg/api/v1/check/${eventRequest.dates.year}-${eventRequest.dates.month}-${eventRequest.dates.day}?n=5`)
-    request(`https://webuild.sg/api/v1/check/${eventRequest.dates.year}-${eventRequest.dates.month+1}-${eventRequest.dates.day}?n=5`, (err, resp, body) => {
+    request(`https://webuild.sg/api/v1/check/${eventRequest.dates.year}-${eventRequest.dates.month + 1}-${eventRequest.dates.day}?n=5`, (err, resp, body) => {
       if (!err) {
         const parsed = JSON.parse(body)
-        var eventElements = generateFbPayload(parsed.events)
-        send.genericTemplate(senderId, eventElements)
+        sendEvent(senderId, parsed)
       }
     })
   } else {
     request('https://webuild.sg/api/v1/events?n=5', (err, resp, body) => {
       if (!err) {
         const parsed = JSON.parse(body)
-        var eventElements = generateFbPayload(parsed.events)
-        send.genericTemplate(senderId, eventElements)
+        sendEvent(senderId, parsed)
       }
     })
   }

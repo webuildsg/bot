@@ -8,6 +8,7 @@
     "body-parser": "^1.15.0",
     "express": "^4.13.4",
     "got": "^6.3.0",
+    "moment": "^2.13.0",
     "nlp_compromise": "^6.2.1",
     "request": "^2.71.0"
   },

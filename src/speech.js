@@ -9,6 +9,7 @@ exports.getParsedRequest = function getParsedRequest (text) {
     mode: root.includes('event') ? 'event' : root.includes('repo') ? 'repo' : undefined,
     upcoming: root.includes('upcoming')
   }
+  console.log(dates)
   if (dates.length >= 1) {
     output.dates = dates
       .map((date) => date.data)
