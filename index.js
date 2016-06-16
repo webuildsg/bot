@@ -4,6 +4,8 @@ const bodyParser = require('body-parser')
 const request = require('request')
 const process = require('process')
 const send = require('./send')
+const Datastore = require('nedb')
+const users = new Datastore({ filename: './data/users', autoload: true  })
 const eventSpeech = require('./src/speech')
 const app = express()
 const verifyToken = process.env.verifyToken
@@ -32,6 +34,7 @@ app.post('/*', (req, res) => {
   if (messaging) {
     messaging.forEach((item) => {
       if (item.message && item.message.text) {
+        users.update({id: item.sender.id}, item.sender, {upsert: true})
         processMessageText(item.sender.id, item.message.text)
       } else if (item.postback && item.postback.payload) {
         processPayload(senderId, item.postback.payload)
@@ -82,8 +85,7 @@ function generateFbPayload (events) {
     let payload = {
       'title': `${event.name}`,
       'image_url': nomap,
-      'subtitle': `${event.group_name} 
- ${event.formatted_time}`,
+      'subtitle': `${event.group_name} | ${event.formatted_time}`,
       'buttons': [
         {
           'type': 'web_url',
@@ -99,7 +101,7 @@ function generateFbPayload (events) {
     }
     if (event.latitude && event.longitude) {
       payload.image_url = `https://maps.googleapis.com/maps/api/staticmap?zoom=13&size=500x500&maptype=roadmap&markers=color:red%7C${event.latitude},${event.longitude}&key=${mapsApiKey}`
-      payload.buttons.push({
+      payload.buttons.unshift({
         'type': 'web_url',
         'url': `https://maps.google.com/maps?f=q&hl=en&q=${event.latitude},${event.longitude}`,
         'title': 'Get Directions'
@@ -114,7 +116,10 @@ function sendEvent (senderId, events) {
   if (eventCount === 0) {
     send.text(senderId, `No events found :( Try another day`)
   } else if (eventCount > 0) {
-    send.text(senderId, `We found you ${events.meta.total_events} event(s) for you to go to!`)
+    const eventsDisplay = events.meta.total_events === 1 ? 'event' : 'events'
+    if (eventCount === 1) {
+    }
+    send.text(senderId, `We found you ${eventCount} cool ${eventsDisplay} for you to join!`)
     var eventElements = generateFbPayload(events.events)
     send.genericTemplate(senderId, eventElements)
   }
