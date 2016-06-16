@@ -84,7 +84,7 @@ ${repo.html_url}
 }
 
 function generateFbPayload (events) {
-  const nomap = 'https://avatars0.githubusercontent.com/u/7611825?v=3&s=500'
+  const nomap = 'https://raw.githubusercontent.com/webuildsg/bot/master/logo2.png'
   return events.map((event) => {
     let payload = {
       'title': `${event.name}`,
