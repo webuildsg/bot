@@ -1,4 +1,4 @@
-# bot
+# 🤖💬
 
 Facebook Messenger bot for querying the upcoming open events and recently updated repositories. Type "upcoming events" to try!
 
