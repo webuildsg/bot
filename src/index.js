@@ -31,48 +31,48 @@ app.post('/*', (req, res) => {
   const messaging = req.body.entry[0].messaging
   if (messaging) {
     messaging.forEach((item) => {
-      const senderId = item.sender.id
+      const recipientId = item.sender.id
       if (item.message && item.message.text) {
-        users.findOne({ id: senderId }, function (err, doc) {
+        users.findOne({ id: recipientId }, function (err, doc) {
           if (doc === null) {
-            users.insert({ id: senderId })
+            users.insert({ id: recipientId })
           }
         })
         processMessageText(item.sender.id, item.message.text)
       } else if (item.postback && item.postback.payload) {
-        processPayload(senderId, item.postback.payload)
+        processPayload(recipientId, item.postback.payload)
       }
     })
   }
   res.sendStatus(200)
 })
 
-function processPayload (senderId, payload) {
+function processPayload (recipientId, payload) {
   if (payload.startsWith('EVENT_')) {
     const jsonPayload = payload.slice(6) // because event_ is 6 characters
   }
 }
 
-function processMessageText (senderId, text) {
+function processMessageText (recipientId, text) {
   const eventRequest = eventSpeech.getParsedRequest(text)
   if (eventRequest.mode === 'event') {
-    upcomingEvent(senderId, eventRequest)
+    upcomingEvent(recipientId, eventRequest)
   } else if (eventRequest.mode === 'repo') {
-    latestRepo(senderId)
+    latestRepo(recipientId)
   }
 }
 
 /**
  * Fetches the latest 5 repositories
- * @param  {[type]} senderId [description]
+ * @param  {[type]} recipientId [description]
  */
-function latestRepo (senderId) {
+function latestRepo (recipientId) {
   request('https://webuild.sg/api/v1/repos?n=5', (err, resp, body) => {
     if (!err) {
       const parsed = JSON.parse(body)
       parsed.repos.forEach((repo) => {
         send.text(
-          senderId,
+          recipientId,
           `${repo.owner.login}/${repo.name}
 ${repo.html_url}
           `
@@ -86,7 +86,7 @@ function generateFbPayload (events) {
   const nomap = 'https://raw.githubusercontent.com/webuildsg/bot/master/no-map.png'
   return events.map((event) => {
     let payload = {
-      'title': `${event.name}`,
+      title: `${event.name}`,
       'image_url': nomap,
       'subtitle': `${event.group_name} | ${event.formatted_time}`,
       'buttons': [
@@ -114,37 +114,37 @@ function generateFbPayload (events) {
   })
 }
 
-function sendEvent (senderId, events) {
+function sendEvent (recipientId, events) {
   const eventCount = +events.meta.total_events
   if (eventCount === 0) {
-    send.text(senderId, 'No events found :( Try another day')
+    send.text(recipientId, 'No events found :( Try another day')
   } else if (eventCount > 0) {
     const eventsDisplay = events.meta.total_events === 1 ? 'event' : 'events'
     if (eventCount === 1) {
     }
-    send.text(senderId, `We found you ${eventCount} cool ${eventsDisplay} for you to join!`)
+    send.text(recipientId, `We found you ${eventCount} cool ${eventsDisplay} for you to join!`)
     var eventElements = generateFbPayload(events.events)
-    send.genericTemplate(senderId, eventElements)
+    send.genericTemplate(recipientId, eventElements)
   }
 }
 
 /**
  * Fetches 5 upcoming events or by event date
- * @param  {[type]} senderId [description]
+ * @param  {[type]} recipientId [description]
  */
-function upcomingEvent (senderId, eventRequest) {
+function upcomingEvent (recipientId, eventRequest) {
   if (eventRequest.dates) {
     request(`https://webuild.sg/api/v1/check/${eventRequest.dates.year}-${eventRequest.dates.month + 1}-${eventRequest.dates.day}?n=5`, (err, resp, body) => {
       if (!err) {
         const parsed = JSON.parse(body)
-        sendEvent(senderId, parsed)
+        sendEvent(recipientId, parsed)
       }
     })
   } else {
     request('https://webuild.sg/api/v1/events?n=5', (err, resp, body) => {
       if (!err) {
         const parsed = JSON.parse(body)
-        sendEvent(senderId, parsed)
+        sendEvent(recipientId, parsed)
       }
     })
   }

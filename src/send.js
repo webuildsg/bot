@@ -2,38 +2,42 @@ const process = require('process')
 const request = require('request')
 const accessToken = process.env.accessToken
 
-exports.text = function (senderId, text) {
-  var messageData = {
+/**
+ * Sends only a text message
+ * @param  {[type]} recipientId [description]
+ * @param  {[type]} text     [description]
+ * @return {[type]}          [description]
+ */
+exports.text = function (recipientId, text) {
+  api(recipientId, {
     text: text
-  }
-  api(senderId, messageData)
+  })
 }
 
-exports.template = function (senderId, payload) {
-  var messageData = {
+exports.attachPayload = function (recipientId, payload) {
+  api(recipientId, {
     attachment: {
       type: 'template',
       payload: payload
     }
-  }
-  api(senderId, messageData)
+  })
 }
 
 /**
  * For generic templates
- * @param  {[type]} senderId [description]
+ * @param  {[type]} recipientId [description]
  * @param  {[type]} elements [description]
  * @return {[type]}          [description]
  */
-exports.genericTemplate = function (senderId, elements) {
-  exports.template(senderId, {
+exports.genericTemplate = function (recipientId, elements) {
+  exports.attachPayload(recipientId, {
     template_type: 'generic',
     elements: elements
   })
 }
 
-exports.buttons = function (senderId, text, buttons) {
-  exports.template(senderId, {
+exports.buttons = function (recipientId, text, buttons) {
+  exports.attachPayload(recipientId, {
     template_type: 'button',
     text: text,
     buttons: buttons
@@ -42,11 +46,11 @@ exports.buttons = function (senderId, text, buttons) {
 
 /**
  * generic send api
- * @param  {[type]} senderId [description]
+ * @param  {[type]} recipientId [description]
  * @param  {[type]} message  [description]
  * @return {[type]}          [description]
  */
-function api (senderId, message) {
+function api (recipientId, message, cb) {
   request({
     url: 'https://graph.facebook.com/v2.6/me/messages',
     qs: {
@@ -55,9 +59,11 @@ function api (senderId, message) {
     method: 'POST',
     json: {
       recipient: {
-        id: senderId
+        id: recipientId
       },
       message: message
     }
-  }, function (error, response) {})
+  }, function (err, resp) {
+    cb(err, resp)
+  })
 }
