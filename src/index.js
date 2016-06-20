@@ -5,8 +5,8 @@ const request = require('request')
 const process = require('process')
 const send = require('./send')
 const Datastore = require('nedb')
-const users = new Datastore({ filename: './data/users', autoload: true  })
-const eventSpeech = require('./src/speech')
+const users = new Datastore({ filename: './data/users', autoload: true })
+const eventSpeech = require('./speech')
 const app = express()
 const verifyToken = process.env.verifyToken
 const mapsApiKey = process.env.mapsApiKey
@@ -28,7 +28,6 @@ app.get('/*', (req, res) => {
 })
 
 app.post('/*', (req, res) => {
-  const q = req.query
   const messaging = req.body.entry[0].messaging
   if (messaging) {
     messaging.forEach((item) => {
