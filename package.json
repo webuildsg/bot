@@ -5,22 +5,27 @@
   "main": "index.js",
   "private": true,
   "dependencies": {
-    "body-parser": "^1.15.0",
-    "express": "^4.13.4",
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
     "got": "^6.3.0",
     "moment": "^2.13.0",
     "nedb": "^1.8.0",
     "nlp_compromise": "^6.2.1",
-    "request": "^2.71.0"
+    "request": "^2.72.0"
   },
   "author": "",
   "devDependencies": {
     "chai": "^3.5.0",
+    "coveralls": "^2.11.9",
+    "istanbul": "^0.4.3",
     "mocha": "^2.5.3",
     "standard": "^7.1.2"
   },
   "scripts": {
-    "test": "mocha test"
+    "lint": "standard test/**/*.js src/**/*.js",
+    "test": "mocha --recursive",
+    "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha --report html",
+    "coverage-ci": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
   },
   "repository": {
     "type": "git",
