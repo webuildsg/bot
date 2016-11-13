@@ -14,7 +14,7 @@
     "nlp_compromise": "^6.5.3",
     "request": "^2.78.0"
   },
-  "author": "",
+  "author": "KahWee Teng <t@kw.sg>",
   "devDependencies": {
     "chai": "^3.5.0",
     "coveralls": "^2.11.15",
