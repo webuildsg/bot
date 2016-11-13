@@ -29,6 +29,7 @@ app.get('/*', (req, res) => {
 
 app.post('/*', (req, res) => {
   const messaging = req.body.entry[0].messaging
+console.log(messaging)
   if (messaging) {
     messaging.forEach((item) => {
       const recipientId = item.sender.id
