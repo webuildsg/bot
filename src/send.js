@@ -64,6 +64,8 @@ function api (recipientId, message, cb) {
       message: message
     }
   }, function (err, resp) {
-    cb(err, resp)
+    if (cb) {
+      cb(err, resp)
+    }
   })
 }

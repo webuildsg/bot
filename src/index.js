@@ -2,7 +2,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const request = require('request')
-const process = require('process')
 const config = require('config')
 const send = require('./send')
 const Datastore = require('nedb')
