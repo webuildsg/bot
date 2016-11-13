@@ -3,13 +3,14 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const request = require('request')
 const process = require('process')
+const config = require('config')
 const send = require('./send')
 const Datastore = require('nedb')
 const users = new Datastore({ filename: './data/users', autoload: true })
 const eventSpeech = require('./speech')
 const app = express()
-const verifyToken = process.env.verifyToken
-const mapsApiKey = process.env.mapsApiKey
+const verifyToken = config.get('validationToken')
+const mapsApiKey = config.get('mapsApiKey')
 
 app.use(bodyParser.json())
 app.set('json spaces', 2)

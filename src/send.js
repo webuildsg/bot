@@ -1,6 +1,6 @@
-const process = require('process')
+const config = require('config')
 const request = require('request')
-const accessToken = process.env.accessToken
+const accessToken = config.get('pageAccessToken')
 
 /**
  * Sends only a text message
