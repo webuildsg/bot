@@ -24,31 +24,27 @@ app.use('/webuild/bot/webhook', Ranka.router({
 }))
 
 ranka.on('message', (req, res) => {
-
   // users.findOne({ id: recipientId }, function (err, doc) {
   //   if (doc === null) {
   //     users.insert({ id: recipientId })
   //   }
   // })
-
-  if (req.body.message.text === 'hi') {
-    res.send({
-      text: 'Please share your location:',
-      quick_replies: [
-        {
-          content_type: 'location'
-        }
-      ]
-    }).exec()
+  const eventRequest = eventSpeech.getParsedRequest(req.body.message.text)
+  if (eventRequest.mode === 'event') {
+    upcomingEvent(req.body.sender.id, eventRequest, req, res)
+  } else if (eventRequest.mode === 'repo') {
+    latestRepo(req.body.sender.id, req, res)
   } else {
-    console.log(222, req.body)
-    const eventRequest = eventSpeech.getParsedRequest(req.body.message.text)
-    console.log(223, eventRequest)
-    if (eventRequest.mode === 'event') {
-      upcomingEvent(req.body.sender.id, eventRequest, req, res)
-    } else if (eventRequest.mode === 'repo') {
-      latestRepo(req.body.sender.id, req, res)
-    }
+    req
+      .sendText("Sorry, I don't understand. Do you like to send a location instead?")
+      .send({
+        text: 'Please share your location:',
+        quick_replies: [
+          {
+            content_type: 'location'
+          }
+        ]
+      }).exec()
   }
 })
 // app.get('/*', (req, res) => {
@@ -73,12 +69,11 @@ function latestRepo (recipientId, req, res) {
     if (!err) {
       const parsed = JSON.parse(body)
       parsed.repos.forEach((repo) => {
-        send.text(
-          recipientId,
-          `${repo.owner.login}/${repo.name}
+        res
+          .sendText(`${repo.owner.login}/${repo.name}
 ${repo.html_url}
-          `
-        )
+          `)
+          .exec()
       })
     }
   })
@@ -130,7 +125,10 @@ function sendEvent (recipientId, events, req, res) {
       .typing()
       .wait(1000)
       .sendText(`Did you say "${req.body.message.text}"?`)
-      .sendAttachmentWithPayload('template', eventElements)
+      .sendAttachmentWithPayload('template', {
+        template_type: 'generic',
+        elements: eventElements
+      })
       .exec()
   }
 }
