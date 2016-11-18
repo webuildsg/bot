@@ -35,7 +35,7 @@ ranka.on('message', (req, res) => {
   } else if (eventRequest.mode === 'repo') {
     latestRepo(req.body.sender.id, req, res)
   } else {
-    req
+    res
       .sendText("Sorry, I don't understand. Do you like to send a location instead?")
       .send({
         text: 'Please share your location:',
