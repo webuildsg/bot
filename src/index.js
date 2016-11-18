@@ -24,6 +24,13 @@ app.use('/webuild/bot/webhook', Ranka.router({
 }))
 
 ranka.on('message', (req, res) => {
+
+  // users.findOne({ id: recipientId }, function (err, doc) {
+  //   if (doc === null) {
+  //     users.insert({ id: recipientId })
+  //   }
+  // })
+
   if (req.body.message.text === 'hi') {
     res.send({
       text: 'Please share your location:',
@@ -34,13 +41,14 @@ ranka.on('message', (req, res) => {
       ]
     }).exec()
   } else {
-    res
-      .sendText('mm...')
-      .typing()
-      .wait(3000)
-      .sendText(`Did you say "${req.body.message.text}"?`)
-      .sendImage('http://i.giphy.com/FdQj4yMGloVMI.gif')
-      .exec()
+    console.log(222, req.body)
+    const eventRequest = eventSpeech.getParsedRequest(req.body.message.text)
+    console.log(223, eventRequest)
+    if (eventRequest.mode === 'event') {
+      upcomingEvent(req.body.sender.id, eventRequest, req, res)
+    } else if (eventRequest.mode === 'repo') {
+      latestRepo(req.body.sender.id, req, res)
+    }
   }
 })
 // app.get('/*', (req, res) => {
@@ -55,40 +63,12 @@ ranka.on('message', (req, res) => {
 //     res.send(req.headers)
 //   }
 // })
-/*
-app.post('/*', (req, res) => {
-  const messaging = req.body.entry[0].messaging
-  if (messaging) {
-    messaging.forEach((item) => {
-      const recipientId = item.sender.id
-      if (item.message && item.message.text) {
-        users.findOne({ id: recipientId }, function (err, doc) {
-          if (doc === null) {
-            users.insert({ id: recipientId })
-          }
-        })
-        processMessageText(item.sender.id, item.message.text)
-      }
-    })
-  }
-  res.sendStatus(200)
-})
-*/
-
-function processMessageText (recipientId, text) {
-  const eventRequest = eventSpeech.getParsedRequest(text)
-  if (eventRequest.mode === 'event') {
-    upcomingEvent(recipientId, eventRequest)
-  } else if (eventRequest.mode === 'repo') {
-    latestRepo(recipientId)
-  }
-}
 
 /**
  * Fetches the latest 5 repositories
  * @param  {[type]} recipientId [description]
  */
-function latestRepo (recipientId) {
+function latestRepo (recipientId, req, res) {
   request('https://webuild.sg/api/v1/repos?n=5', (err, resp, body) => {
     if (!err) {
       const parsed = JSON.parse(body)
@@ -136,17 +116,22 @@ function generateFbPayload (events) {
   })
 }
 
-function sendEvent (recipientId, events) {
+function sendEvent (recipientId, events, req, res) {
   const eventCount = +events.meta.total_events
   if (eventCount === 0) {
-    send.text(recipientId, 'No events found :( Try another day')
+    res
+      .sendText('No events found :( Try another day')
+      .exec()
   } else if (eventCount > 0) {
     const eventsDisplay = events.meta.total_events === 1 ? 'event' : 'events'
-    if (eventCount === 1) {
-    }
-    send.text(recipientId, `We found you ${eventCount} cool ${eventsDisplay} for you to join!`)
     var eventElements = generateFbPayload(events.events)
-    send.genericTemplate(recipientId, eventElements)
+    res
+      .sendText(`We found you ${eventCount} cool ${eventsDisplay} for you to join!`)
+      .typing()
+      .wait(1000)
+      .sendText(`Did you say "${req.body.message.text}"?`)
+      .sendAttachmentWithPayload('template', eventElements)
+      .exec()
   }
 }
 
@@ -154,19 +139,19 @@ function sendEvent (recipientId, events) {
  * Fetches 5 upcoming events or by event date
  * @param  {[type]} recipientId [description]
  */
-function upcomingEvent (recipientId, eventRequest) {
+function upcomingEvent (recipientId, eventRequest, req, res) {
   if (eventRequest.dates) {
     request(`https://webuild.sg/api/v1/check/${eventRequest.dates.year}-${eventRequest.dates.month + 1}-${eventRequest.dates.day}?n=5`, (err, resp, body) => {
       if (!err) {
         const parsed = JSON.parse(body)
-        sendEvent(recipientId, parsed)
+        sendEvent(recipientId, parsed, req, res)
       }
     })
   } else {
     request('https://webuild.sg/api/v1/events?n=5', (err, resp, body) => {
       if (!err) {
         const parsed = JSON.parse(body)
-        sendEvent(recipientId, parsed)
+        sendEvent(recipientId, parsed, req, res)
       }
     })
   }
