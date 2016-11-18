@@ -14,22 +14,50 @@ const mapsApiKey = config.get('mapsApiKey')
 app.use(bodyParser.json())
 app.set('json spaces', 2)
 
-app.get('/*', (req, res) => {
-  const q = req.query
-  // If the token doesn't match...
-  if (q['hub.verify_token'] !== verifyToken) {
-    res.sendStatus(401)
-  }
-  if (q['hub.mode'] === 'subscribe') {
-    res.send(q['hub.challenge'])
+const Ranka = require('ranka')
+const ranka = new Ranka({
+  validationToken: config.get('validationToken'),
+  pageAccessToken: config.get('pageAccessToken')
+})
+app.use('/webhook', Ranka.router({
+  ranka: ranka
+}))
+
+ranka.on('message', (req, res) => {
+  if (req.body.message.text === 'hi') {
+    res.send({
+      text: 'Please share your location:',
+      quick_replies: [
+        {
+          content_type: 'location'
+        }
+      ]
+    }).exec()
   } else {
-    res.send(req.headers)
+    res
+      .sendText('mm...')
+      .typing()
+      .wait(3000)
+      .sendText(`Did you say "${req.body.message.text}"?`)
+      .sendImage('http://i.giphy.com/FdQj4yMGloVMI.gif')
+      .exec()
   }
 })
+// app.get('/*', (req, res) => {
+//   const q = req.query
+//   // If the token doesn't match...
+//   if (q['hub.verify_token'] !== verifyToken) {
+//     res.sendStatus(401)
+//   }
+//   if (q['hub.mode'] === 'subscribe') {
+//     res.send(q['hub.challenge'])
+//   } else {
+//     res.send(req.headers)
+//   }
+// })
 
 app.post('/*', (req, res) => {
   const messaging = req.body.entry[0].messaging
-console.log(messaging)
   if (messaging) {
     messaging.forEach((item) => {
       const recipientId = item.sender.id
@@ -40,19 +68,11 @@ console.log(messaging)
           }
         })
         processMessageText(item.sender.id, item.message.text)
-      } else if (item.postback && item.postback.payload) {
-        processPayload(recipientId, item.postback.payload)
       }
     })
   }
   res.sendStatus(200)
 })
-
-function processPayload (recipientId, payload) {
-  if (payload.startsWith('EVENT_')) {
-    const jsonPayload = payload.slice(6) // because event_ is 6 characters
-  }
-}
 
 function processMessageText (recipientId, text) {
   const eventRequest = eventSpeech.getParsedRequest(text)
