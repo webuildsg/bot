@@ -19,7 +19,7 @@ const ranka = new Ranka({
   validationToken: config.get('validationToken'),
   pageAccessToken: config.get('pageAccessToken')
 })
-app.use('/webhook', Ranka.router({
+app.use('/webuild/bot/webhook', Ranka.router({
   ranka: ranka
 }))
 
@@ -55,7 +55,7 @@ ranka.on('message', (req, res) => {
 //     res.send(req.headers)
 //   }
 // })
-
+/*
 app.post('/*', (req, res) => {
   const messaging = req.body.entry[0].messaging
   if (messaging) {
@@ -73,6 +73,7 @@ app.post('/*', (req, res) => {
   }
   res.sendStatus(200)
 })
+*/
 
 function processMessageText (recipientId, text) {
   const eventRequest = eventSpeech.getParsedRequest(text)
