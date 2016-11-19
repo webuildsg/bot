@@ -4,6 +4,7 @@ const bodyParser = require('body-parser')
 const request = require('request')
 const config = require('config')
 const Datastore = require('nedb')
+const moment = require('moment')
 const users = new Datastore({ filename: './data/users', autoload: true })
 const eventSpeech = require('./speech')
 const app = express()
@@ -30,6 +31,19 @@ ranka.on('message', (req, res) => {
   const eventRequest = eventSpeech.getParsedRequest(req.message.text)
   if (eventRequest.mode === 'event') {
     upcomingEvent(eventRequest, req, res)
+  } else if (eventRequest.mode === 'podcast') {
+    request('https://webuild.sg/api/v1/podcasts', (err, resp, body) => {
+      if (!err) {
+        const parsed = JSON.parse(body)
+        const next = body.meta.next_live_show
+        const prev = body.podcasts[0]
+        res
+          .sendText(`The next podcast features ${next.description} and will commence on ${moment(next.start_time).format('dddd, MMMM Do YYYY, h:mm:ss a')}!`)
+          .sendText(`Meanwhile, checkout our previous podcast featuring ${prev.description}`)
+          .sendAudio(prev.download_link)
+          .exec()
+      }
+    })
   } else if (eventRequest.mode === 'repo') {
     request('https://webuild.sg/api/v1/repos?n=5', (err, resp, body) => {
       if (!err) {

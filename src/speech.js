@@ -5,8 +5,14 @@ exports.getParsedRequest = function getParsedRequest (text) {
   let dates = nlpText.dates()
   const root = nlpText.root()
   let output = {
-    mode: root.includes('event') || root.includes('meetup') ? 'event' : root.includes('repo') ? 'repo' : undefined,
     upcoming: root.includes('upcoming') || root.includes('coming') || root.includes('future')
+  }
+  if (root.includes('event') || root.includes('meetup')) {
+    output.mode = 'event'
+  } else if (root.includes('repo')) {
+    output.mode = 'repo'
+  } else if (root.includes('podcast')) {
+    output.mode = 'podcast'
   }
   if (dates.length >= 1) {
     output.dates = dates
