@@ -35,8 +35,8 @@ ranka.on('message', (req, res) => {
     request('https://webuild.sg/api/v1/podcasts', (err, resp, body) => {
       if (!err) {
         const parsed = JSON.parse(body)
-        const next = body.meta.next_live_show
-        const prev = body.podcasts[0]
+        const next = parsed.meta.next_live_show
+        const prev = parsed.podcasts[0]
         res
           .sendText(`The next podcast features ${next.description} and will commence on ${moment(next.start_time).format('dddd, MMMM Do YYYY, h:mm:ss a')}!`)
           .sendText(`Meanwhile, checkout our previous podcast featuring ${prev.description}`)
