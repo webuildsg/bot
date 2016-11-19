@@ -29,9 +29,20 @@ ranka.on('message', (req, res) => {
   // })
   const eventRequest = eventSpeech.getParsedRequest(req.body.message.text)
   if (eventRequest.mode === 'event') {
-    upcomingEvent(req.body.sender.id, eventRequest, req, res)
+    upcomingEvent(eventRequest, req, res)
   } else if (eventRequest.mode === 'repo') {
-    latestRepo(req.body.sender.id, req, res)
+    request('https://webuild.sg/api/v1/repos?n=5', (err, resp, body) => {
+      if (!err) {
+        const parsed = JSON.parse(body)
+        parsed.repos.forEach((repo) => {
+          res
+            .sendText(`${repo.owner.login}/${repo.name}
+${repo.html_url}
+          `)
+            .exec()
+        })
+      }
+    })
   } else {
     res
       .sendText("Sorry, I don't understand. Do you like to send a location instead?")
@@ -45,37 +56,6 @@ ranka.on('message', (req, res) => {
       }).exec()
   }
 })
-// app.get('/*', (req, res) => {
-//   const q = req.query
-//   // If the token doesn't match...
-//   if (q['hub.verify_token'] !== verifyToken) {
-//     res.sendStatus(401)
-//   }
-//   if (q['hub.mode'] === 'subscribe') {
-//     res.send(q['hub.challenge'])
-//   } else {
-//     res.send(req.headers)
-//   }
-// })
-
-/**
- * Fetches the latest 5 repositories
- * @param  {[type]} recipientId [description]
- */
-function latestRepo (recipientId, req, res) {
-  request('https://webuild.sg/api/v1/repos?n=5', (err, resp, body) => {
-    if (!err) {
-      const parsed = JSON.parse(body)
-      parsed.repos.forEach((repo) => {
-        res
-          .sendText(`${repo.owner.login}/${repo.name}
-${repo.html_url}
-          `)
-          .exec()
-      })
-    }
-  })
-}
 
 function generateFbPayload (events) {
   const nomap = 'https://raw.githubusercontent.com/webuildsg/bot/master/no-map.png'
@@ -109,7 +89,7 @@ function generateFbPayload (events) {
   })
 }
 
-function sendEvent (recipientId, events, req, res) {
+function sendEvent (events, req, res) {
   const eventCount = +events.meta.total_events
   if (eventCount === 0) {
     res
@@ -117,13 +97,12 @@ function sendEvent (recipientId, events, req, res) {
       .exec()
   } else if (eventCount > 0) {
     const eventsDisplay = events.meta.total_events === 1 ? 'event' : 'events'
-    var eventElements = generateFbPayload(events.events)
+    const eventElements = generateFbPayload(events.events)
     res
       .sendText(`We found you ${eventCount} cool ${eventsDisplay} for you to join!`)
       .typing()
       .wait(1000)
-      .sendText(`Did you say "${req.body.message.text}"?`)
-      .sendAttachmentWithPayload('template', {
+      .sendTemplate({
         template_type: 'generic',
         elements: eventElements
       })
@@ -135,19 +114,19 @@ function sendEvent (recipientId, events, req, res) {
  * Fetches 5 upcoming events or by event date
  * @param  {[type]} recipientId [description]
  */
-function upcomingEvent (recipientId, eventRequest, req, res) {
+function upcomingEvent (eventRequest, req, res) {
   if (eventRequest.dates) {
     request(`https://webuild.sg/api/v1/check/${eventRequest.dates.year}-${eventRequest.dates.month + 1}-${eventRequest.dates.day}?n=5`, (err, resp, body) => {
       if (!err) {
         const parsed = JSON.parse(body)
-        sendEvent(recipientId, parsed, req, res)
+        sendEvent(parsed, req, res)
       }
     })
   } else {
     request('https://webuild.sg/api/v1/events?n=5', (err, resp, body) => {
       if (!err) {
         const parsed = JSON.parse(body)
-        sendEvent(recipientId, parsed, req, res)
+        sendEvent(parsed, req, res)
       }
     })
   }

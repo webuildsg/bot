@@ -12,7 +12,7 @@
     "moment": "^2.16.0",
     "nedb": "^1.8.0",
     "nlp_compromise": "^6.5.3",
-    "ranka": "^0.1.4",
+    "ranka": "^0.1.5",
     "request": "^2.78.0"
   },
   "author": "KahWee Teng <t@kw.sg>",

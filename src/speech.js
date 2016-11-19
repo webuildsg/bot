@@ -1,4 +1,3 @@
-'use strict'
 const nlp = require('nlp_compromise')
 
 exports.getParsedRequest = function getParsedRequest (text) {
@@ -7,7 +6,7 @@ exports.getParsedRequest = function getParsedRequest (text) {
   const root = nlpText.root()
   let output = {
     mode: root.includes('event') || root.includes('meetup') ? 'event' : root.includes('repo') ? 'repo' : undefined,
-    upcoming: root.includes('upcoming')
+    upcoming: root.includes('upcoming') || root.includes('coming') || root.includes('future')
   }
   if (dates.length >= 1) {
     output.dates = dates
