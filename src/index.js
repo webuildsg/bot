@@ -40,8 +40,17 @@ ranka.on('message', (req, res) => {
         console.log(prev)
         res
           .sendText(`The next podcast features ${next.description} and will commence on ${moment(next.start_time, 'YYYY/MM/DD HH:MM:SS Z').format('dddd, MMMM Do YYYY, h:mm:ss a')}!`)
-          .sendText(`Meanwhile, checkout our previous podcast featuring ${prev.description}`)
-          .sendAudio(prev.download_link)
+          .sendTemplate({
+            'template_type': 'button',
+            'text': `Meanwhile, checkout our previous podcast featuring ${prev.description}`,
+            'buttons': [
+              {
+                'type': 'web_url',
+                'url': prev.download_link,
+                'title': 'Download Audio'
+              }
+            ]
+          })
           .exec()
       }
     })
