@@ -27,7 +27,7 @@ ranka.on('message', (req, res) => {
   //     users.insert({ id: recipientId })
   //   }
   // })
-  const eventRequest = eventSpeech.getParsedRequest(req.body.message.text)
+  const eventRequest = eventSpeech.getParsedRequest(req.message.text)
   if (eventRequest.mode === 'event') {
     upcomingEvent(eventRequest, req, res)
   } else if (eventRequest.mode === 'repo') {
