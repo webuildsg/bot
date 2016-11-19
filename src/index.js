@@ -37,8 +37,9 @@ ranka.on('message', (req, res) => {
         const parsed = JSON.parse(body)
         const next = parsed.meta.next_live_show
         const prev = parsed.podcasts[0]
+        console.log(prev)
         res
-          .sendText(`The next podcast features ${next.description} and will commence on ${moment(next.start_time).format('dddd, MMMM Do YYYY, h:mm:ss a')}!`)
+          .sendText(`The next podcast features ${next.description} and will commence on ${moment(next.start_time, 'YYYY/MM/DD HH:MM:SS Z').format('dddd, MMMM Do YYYY, h:mm:ss a')}!`)
           .sendText(`Meanwhile, checkout our previous podcast featuring ${prev.description}`)
           .sendAudio(prev.download_link)
           .exec()
