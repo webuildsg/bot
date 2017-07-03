@@ -3,6 +3,7 @@ module.exports = {
     name: 'index',
     script: './index.js',
     watch: true,
+    ignore_watch: ["uploads", "data", "data/users"],
     env: {
       'NODE_ENV': 'development'
     },
